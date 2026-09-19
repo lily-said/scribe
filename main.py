@@ -57,7 +57,6 @@ class InteractRequest(BaseModel):
     audio_mime_type: str = Field("audio/webm", description="MIME type of audio")
     text_prompt: Optional[str] = Field(None, description="Optional text command or question")
     voice: Optional[str] = Field(None, description="Preferred TTS voice")
-    generate_tts: bool = Field(False, description="Generate server neural TTS (slower) or client fast speech")
 
 class TTSRequest(BaseModel):
     text: str = Field(..., description="Text to synthesize")
@@ -95,7 +94,6 @@ async def api_interact(
             audio_mime_type=req.audio_mime_type,
             text_prompt=req.text_prompt,
             voice=req.voice,
-            generate_tts=req.generate_tts,
             api_key=x_gemini_api_key
         )
         return result

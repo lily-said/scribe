@@ -304,6 +304,51 @@ class SmartGlassesApp {
         this.runPreset(presetId);
       });
     });
+
+    // Cancel / Stop button + Escape key
+    if (this.cancelBtn) {
+      this.cancelBtn.addEventListener('click', () => this.cancelInteraction());
+    }
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.cancelInteraction();
+    });
+
+    // Fast mode toggle — update label text
+    if (this.fastModeCheckbox) {
+      this.fastModeCheckbox.addEventListener('change', () => {
+        const on = this.fastModeCheckbox.checked;
+        const label = document.querySelector('.speed-text');
+        if (label) {
+          label.textContent = on
+            ? '⚡ Fast Mode: ON (Sub-Second Instant Speech)'
+            : 'Fast Mode: OFF (Gemini Neural Voice)';
+        }
+      });
+    }
+  }
+
+  cancelInteraction() {
+    if (this.currentAbortController) {
+      this.currentAbortController.abort();
+      this.currentAbortController = null;
+    }
+    if (this.mediaRecorder && this.isRecording) {
+      this.mediaRecorder.stop();
+      this.isRecording = false;
+    }
+    if (this.audioPlayer) {
+      this.audioPlayer.pause();
+      this.audioPlayer.src = '';
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    this.setProcessingState(false);
+    this.mainActionBtn.classList.remove('recording');
+    this.actionIcon.textContent = '🎙️';
+    this.actionText.textContent = 'Hold or Tap to Talk to Glasses (Spacebar)';
+    this.audioStatusLabel.textContent = 'AUDIO: IDLE';
+    this.hudStatusBadge.textContent = 'AI CORTEX: READY';
+    if (this.cancelBtn) this.cancelBtn.style.display = 'none';
+    this.hudTranscript.textContent = 'Cancelled.';
   }
 
   captureFrameBase64() {
@@ -420,6 +465,10 @@ class SmartGlassesApp {
     this.setProcessingState(true, 'GEMINI THINKING & ANALYZING...');
     const startTime = performance.now();
 
+    // Set up abort controller and show Stop button
+    this.currentAbortController = new AbortController();
+    if (this.cancelBtn) this.cancelBtn.style.display = 'flex';
+
     try {
       let audioBase64 = null;
       let audioMime = 'audio/webm';
@@ -436,6 +485,7 @@ class SmartGlassesApp {
 
       const voice = this.getVoice();
       const apiKey = this.getApiKey();
+      const fastMode = this.fastModeCheckbox ? this.fastModeCheckbox.checked : true;
 
       const headers = { 'Content-Type': 'application/json' };
       if (apiKey) headers['x-gemini-api-key'] = apiKey;
@@ -443,13 +493,15 @@ class SmartGlassesApp {
       const res = await fetch('/api/interact', {
         method: 'POST',
         headers,
+        signal: this.currentAbortController.signal,
         body: JSON.stringify({
           image_base64: imageB64,
           image_mime_type: 'image/jpeg',
           audio_base64: audioBase64,
           audio_mime_type: audioMime,
           text_prompt: textPrompt,
-          voice: voice
+          voice: voice,
+          generate_tts: !fastMode
         })
       });
 
@@ -459,16 +511,19 @@ class SmartGlassesApp {
       }
 
       const data = await res.json();
-      const latency = Math.round(performance.now() - startTime);
-      this.latencyDisplay.textContent = `${latency} ms`;
-
       this.displayResults(data);
       this.handleAudioOutput(data.spoken_response, data.audio_url);
 
     } catch (err) {
+      if (err.name === 'AbortError') {
+        // User cancelled — already handled by cancelInteraction()
+        return;
+      }
       console.error('Interaction error:', err);
       this.hudTranscript.textContent = `Error: ${err.message}`;
     } finally {
+      this.currentAbortController = null;
+      if (this.cancelBtn) this.cancelBtn.style.display = 'none';
       this.setProcessingState(false);
       this.audioStatusLabel.textContent = 'AUDIO: IDLE';
       this.hudStatusBadge.textContent = 'AI CORTEX: READY';
