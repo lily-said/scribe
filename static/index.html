@@ -17,7 +17,7 @@
       <div class="logo-icon">🕶️</div>
       <div class="logo-text">
         <h1>Scribe Spectacles</h1>
-        <div class="subtitle">Gemini Multimodal Voice & Vision Assistant // Zero Modes</div>
+        <div class="subtitle">Gemini Multimodal Voice & Vision Assistant </div>
       </div>
     </div>
 
@@ -67,9 +67,6 @@
 
           <!-- Top HUD Banner -->
           <div class="hud-top-bar">
-            <span class="hud-mode-badge" id="hud-status-badge">AI CORTEX: ONLINE</span>
-            <span id="hud-vision-status">EYES & EARS ACTIVE</span>
-            <span id="hud-fps">30 FPS</span>
           </div>
 
           <!-- Bottom HUD Banner with Live Transcript & Audio Visualizer -->
@@ -124,18 +121,7 @@
             <button class="chip-prompt" data-prompt="What does that sign say?">
               🪧 "What does that sign say?"
             </button>
-            <button class="chip-prompt" data-prompt="Translate what this person is saying into English">
-              🗣️ "Translate conversation"
-            </button>
           </div>
-        </div>
-
-        <!-- Optional Text Input for Silent / Manual Querying -->
-        <div class="custom-prompt-container">
-          <input type="text" id="user-custom-prompt" class="input-prompt" placeholder="Or type a question for the glasses (e.g. 'Translate this', 'Where is my mug?')">
-          <button id="send-text-btn" class="btn-icon" style="padding: 0.65rem 1rem;">
-            Ask ↵
-          </button>
         </div>
 
         <!-- Keyboard Shortcut Legend -->
@@ -143,7 +129,6 @@
           <span>Shortcuts:</span>
           <span><span class="kbd-badge">Space</span> Hold to Talk / Send</span>
           <span><span class="kbd-badge">R</span> Replay Audio</span>
-          <span><span class="kbd-badge">1-4</span> Trigger Demo Presets</span>
         </div>
       </div>
     </section>
@@ -212,36 +197,6 @@
               <div class="field-value" id="extra-details-text">—</div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Demo Presets Drawer (Instant Presentation Samples) -->
-      <div class="inspector-card">
-        <div class="card-header">
-          <div class="card-title">
-            <span>Demo Scenarios</span>
-          </div>
-        </div>
-        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
-          Instant sample inputs for live hackathon judging:
-        </div>
-        <div class="presets-grid">
-          <button class="preset-btn" data-preset="translate_sign">
-            <span class="preset-title">🚇 "Translate this for me"</span>
-            <span class="preset-desc">Tokyo subway sign in Japanese</span>
-          </button>
-          <button class="preset-btn" data-preset="room_nav">
-            <span class="preset-title">👁️ "What's in front of me?"</span>
-            <span class="preset-desc">Living room obstacle course</span>
-          </button>
-          <button class="preset-btn" data-preset="paris_menu">
-            <span class="preset-title">🥐 "Read this menu"</span>
-            <span class="preset-desc">Parisian bistro menu OCR</span>
-          </button>
-          <button class="preset-btn" data-preset="mandarin_direction">
-            <span class="preset-title">🗣️ "Translate conversation"</span>
-            <span class="preset-desc">Mandarin audio translation</span>
-          </button>
         </div>
       </div>
     </aside>

@@ -159,7 +159,6 @@ class SmartGlassesApp {
         this.cameraSelect.appendChild(opt);
       });
 
-      this.hudVisionStatus.textContent = 'EYES & EARS ACTIVE';
     } catch (err) {
       console.warn('Camera access denied or unavailable:', err);
       this.hudVisionStatus.textContent = 'CAMERA OFFLINE (USING PRESETS)';
@@ -246,10 +245,6 @@ class SmartGlassesApp {
       } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         this.replayLastAudio();
-      } else if (['1', '2', '3', '4'].includes(e.key)) {
-        const presets = ['translate_sign', 'room_nav', 'paris_menu', 'mandarin_direction'];
-        const pId = presets[parseInt(e.key, 10) - 1];
-        if (pId) this.runPreset(pId);
       }
     });
 
@@ -297,14 +292,6 @@ class SmartGlassesApp {
       this.initCamera(e.target.value);
     });
 
-    // Preset buttons
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const presetId = btn.getAttribute('data-preset');
-        this.runPreset(presetId);
-      });
-    });
-
     // Cancel / Stop button + Escape key
     if (this.cancelBtn) {
       this.cancelBtn.addEventListener('click', () => this.cancelInteraction());
@@ -346,7 +333,6 @@ class SmartGlassesApp {
     this.actionIcon.textContent = '🎙️';
     this.actionText.textContent = 'Hold or Tap to Talk to Glasses (Spacebar)';
     this.audioStatusLabel.textContent = 'AUDIO: IDLE';
-    this.hudStatusBadge.textContent = 'AI CORTEX: READY';
     if (this.cancelBtn) this.cancelBtn.style.display = 'none';
     this.hudTranscript.textContent = 'Cancelled.';
   }
@@ -525,8 +511,6 @@ class SmartGlassesApp {
       this.currentAbortController = null;
       if (this.cancelBtn) this.cancelBtn.style.display = 'none';
       this.setProcessingState(false);
-      this.audioStatusLabel.textContent = 'AUDIO: IDLE';
-      this.hudStatusBadge.textContent = 'AI CORTEX: READY';
     }
   }
 
@@ -610,25 +594,6 @@ class SmartGlassesApp {
     }
   }
 
-  // PRESET DEMO SCENARIOS
-  async runPreset(presetId) {
-    if (this.isProcessing) return;
-
-    const res = await fetch('/api/presets');
-    const data = await res.json();
-    const preset = data.presets.find(p => p.id === presetId);
-    if (!preset) return;
-
-    if (preset.type === 'image') {
-      const b64 = await this.fetchAssetAsBase64(preset.file);
-      this.triggerShutter(b64);
-      await this.processMultimodalInteraction(b64, null, preset.prompt);
-    } else if (preset.type === 'audio') {
-      const audioBlob = await this.fetchAssetAsBlob(preset.file);
-      await this.processMultimodalInteraction(null, audioBlob, preset.prompt);
-    }
-  }
-
   async fetchAssetAsBase64(url) {
     const res = await fetch(url);
     const blob = await res.blob();
@@ -652,7 +617,6 @@ class SmartGlassesApp {
       this.hudTranscript.textContent = statusMessage;
       this.connectionDot.classList.add('busy');
     } else {
-      this.hudVisionStatus.textContent = 'EYES & EARS ACTIVE';
       this.connectionDot.classList.remove('busy');
     }
   }

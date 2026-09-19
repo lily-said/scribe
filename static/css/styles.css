@@ -277,7 +277,6 @@ main {
   font-size: 0.75rem;
   color: var(--accent-cyan);
   text-shadow: 0 0 6px rgba(0, 242, 254, 0.6);
-  background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
   padding: 0.4rem 0.75rem;
   border-radius: 6px;
 }
@@ -296,7 +295,6 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%);
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
 }
