@@ -417,8 +417,8 @@ class SmartGlassesApp {
       this.hudStatusBadge.textContent = 'LISTENING TO WEARER';
 
     } catch (err) {
-      console.error('Failed to start microphone recording:', err);
-      alert('Microphone access is needed to speak to the glasses. Please grant microphone permissions or type a prompt.');
+      console.error('Failed to start microphone recording');
+      alert('Microphone access is needed. Please grant microphone permissions.');
     }
   }
 
