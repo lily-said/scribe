@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scribe — Gemini Smart Glasses I/O Prototype</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Glass Bar -->
+  <header>
+    <div class="logo-group">
+      <div class="logo-icon">🕶️</div>
+      <div class="logo-text">
+        <h1>Scribe Spectacles</h1>
+        <div class="subtitle">Gemini Multimodal Voice & Vision Assistant // Zero Modes</div>
+      </div>
+    </div>
+
+    <div class="header-telemetry">
+      <div class="telemetry-item">
+        <div id="connection-status-dot" class="status-dot"></div>
+        <span id="connection-status-text">Gemini 3.8 Flash Ready</span>
+      </div>
+      <div class="telemetry-item">
+        <span>⚡ Battery: 98%</span>
+      </div>
+      <div class="telemetry-item">
+        <span>⏱ <span id="latency-display">0 ms</span></span>
+      </div>
+      <button id="settings-open-btn" class="btn-icon" title="Settings & API Key">
+        ⚙ Settings
+      </button>
+    </div>
+  </header>
+
+  <!-- Main HUD Layout -->
+  <main>
+    <!-- Left Column: Camera Viewport with AR Glasses HUD -->
+    <section class="hud-section">
+      <div class="viewport-card">
+        <!-- Live Video Element -->
+        <video id="camera-feed" autoplay playsinline muted></video>
+        <!-- Canvas for Snapshot Grabbing -->
+        <canvas id="preview-canvas"></canvas>
+
+        <!-- Shutter Flash Animation -->
+        <div id="shutter-flash" class="shutter-flash"></div>
+
+        <!-- Picture-in-Picture Snapshot Preview -->
+        <div id="snapshot-preview-pip" class="snapshot-pip" style="display: none;">
+          <div class="pip-header">
+            <span>📸 SNAPSHOT CAPTURED</span>
+            <span class="pip-subtext">You can lower your phone now!</span>
+          </div>
+          <img id="snapshot-pip-img" alt="Captured frame">
+        </div>
+
+        <!-- AR Heads-Up Display Graphic Overlays -->
+        <div class="glasses-overlay">
+          <!-- Corner Brackets -->
+          <div class="corner-bracket corner-top-left"></div>
+          <div class="corner-bracket corner-top-right"></div>
+          <div class="corner-bracket corner-bottom-left"></div>
+          <div class="corner-bracket corner-bottom-right"></div>
+
+          <!-- Center Crosshair / Targeting Reticle -->
+          <div class="hud-crosshair"></div>
+
+          <!-- Top HUD Banner -->
+          <div class="hud-top-bar">
+            <span class="hud-mode-badge" id="hud-status-badge">AI CORTEX: ONLINE</span>
+            <span id="hud-vision-status">EYES & EARS ACTIVE</span>
+            <span id="hud-fps">30 FPS</span>
+          </div>
+
+          <!-- Bottom HUD Banner with Live Transcript & Audio Visualizer -->
+          <div class="hud-bottom-bar">
+            <div class="hud-live-transcript" id="hud-transcript">
+              Press the action button or Spacebar and ask anything: "Translate this", "What's in front of me?", etc.
+            </div>
+            <div class="audio-visualizer-container">
+              <canvas id="hud-waveform" width="140" height="36"></canvas>
+              <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);" id="audio-status-label">AUDIO: IDLE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls Card: Single Action Button + Voice Suggestion Chips -->
+      <div class="controls-card">
+        <!-- Single Big Push-to-Talk Action Button (Zero Modes!) -->
+        <!-- Single Big Push-to-Talk Action Button + Cancel/Stop Button -->
+        <div class="action-trigger-bar">
+          <button id="main-action-btn" class="btn-trigger btn-talk">
+            <span id="action-icon" style="font-size: 1.3rem;">🎙️</span>
+            <span id="action-text">Hold or Tap to Talk to Glasses (Spacebar)</span>
+          </button>
+          <button id="cancel-action-btn" class="btn-cancel" style="display: none;" title="Cancel or Stop (Esc)">
+            <span>⏹ Stop</span>
+          </button>
+        </div>
+
+        <!-- Speed / Latency Optimization Toggle -->
+        <div class="speed-bar">
+          <label class="speed-toggle-label" title="Fast Mode uses instant speech synthesis to eliminate the 2nd API audio roundtrip, cutting latency by 70%">
+            <input type="checkbox" id="fast-mode-checkbox" checked>
+            <span class="speed-toggle-custom"></span>
+            <span class="speed-text">⚡ Fast Mode: ON (Sub-Second Instant Speech)</span>
+          </label>
+        </div>
+
+        <!-- Quick Voice Suggestion Chips -->
+        <div class="suggestions-container">
+          <div class="suggestions-label">Try speaking (or tap a quick demo prompt):</div>
+          <div class="chips-row">
+            <button class="chip-prompt" data-prompt="Translate this for me">
+              🌐 "Translate this for me"
+            </button>
+            <button class="chip-prompt" data-prompt="Tell me what is in front of me">
+              👁️ "Tell me what's in front of me"
+            </button>
+            <button class="chip-prompt" data-prompt="Are there any hazards or obstacles in my path?">
+              ⚠️ "Are there any hazards?"
+            </button>
+            <button class="chip-prompt" data-prompt="What does that sign say?">
+              🪧 "What does that sign say?"
+            </button>
+            <button class="chip-prompt" data-prompt="Translate what this person is saying into English">
+              🗣️ "Translate conversation"
+            </button>
+          </div>
+        </div>
+
+        <!-- Optional Text Input for Silent / Manual Querying -->
+        <div class="custom-prompt-container">
+          <input type="text" id="user-custom-prompt" class="input-prompt" placeholder="Or type a question for the glasses (e.g. 'Translate this', 'Where is my mug?')">
+          <button id="send-text-btn" class="btn-icon" style="padding: 0.65rem 1rem;">
+            Ask ↵
+          </button>
+        </div>
+
+        <!-- Keyboard Shortcut Legend -->
+        <div class="hotkey-legend">
+          <span>Shortcuts:</span>
+          <span><span class="kbd-badge">Space</span> Hold to Talk / Send</span>
+          <span><span class="kbd-badge">R</span> Replay Audio</span>
+          <span><span class="kbd-badge">1-4</span> Trigger Demo Presets</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: AI Intelligence & Perception Inspector -->
+    <aside class="inspector-section">
+      <!-- Voice / Earpiece Output Box -->
+      <div class="inspector-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🔊 Glasses Earpiece Audio</span>
+          </div>
+          <button id="replay-audio-btn" class="audio-replay-btn" disabled>
+            <span>↻ Replay Voice</span>
+          </button>
+        </div>
+        <div class="speech-playback-box">
+          <div id="speech-spoken-display" class="speech-text">
+            Smart glasses audio will output here when you speak to Gemini.
+          </div>
+          <div class="speech-controls">
+            <span id="tts-source-badge">Voice Engine: Ready</span>
+            <span id="audio-playback-timer">00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dialogue & Multimodal Perception Card -->
+      <div class="inspector-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>💬 Multimodal Understanding</span>
+          </div>
+          <span class="intent-badge" id="detected-intent-badge">Awaiting command</span>
+        </div>
+
+        <div class="dialogue-container">
+          <!-- What You Asked -->
+          <div class="dialogue-box wearer-box">
+            <div class="dialogue-header">YOU SAID</div>
+            <div class="dialogue-content" id="wearer-query-display">
+              Press the button and say: "Translate this for me", "What's in front of me?", etc.
+            </div>
+          </div>
+
+          <!-- What Gemini Sees & Answers -->
+          <div class="dialogue-box ai-box">
+            <div class="dialogue-header">GEMINI PERCEPTION & RESPONSE</div>
+            <div class="dialogue-content" id="ai-response-display">
+              Gemini will simultaneously analyze your camera view and voice audio to respond.
+            </div>
+          </div>
+
+          <!-- Visual Tags & Detected Objects/Text -->
+          <div>
+            <div class="field-label" style="margin-bottom: 0.35rem;">Detected Visual Features / Tags</div>
+            <div class="chips-container" id="visual-tags-container">
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">No objects or text scanned yet</span>
+            </div>
+          </div>
+
+          <!-- Extra Context / Details -->
+          <div id="extra-details-container" style="display: none;">
+            <div class="field-label" style="margin-bottom: 0.35rem;">Details & Translation Notes</div>
+            <div class="translation-field">
+              <div class="field-value" id="extra-details-text">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Demo Presets Drawer (Instant Presentation Samples) -->
+      <div class="inspector-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>⚡ Demo Scenarios (One-Click)</span>
+          </div>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+          Instant sample inputs for live hackathon judging:
+        </div>
+        <div class="presets-grid">
+          <button class="preset-btn" data-preset="translate_sign">
+            <span class="preset-title">🚇 "Translate this for me"</span>
+            <span class="preset-desc">Tokyo subway sign in Japanese</span>
+          </button>
+          <button class="preset-btn" data-preset="room_nav">
+            <span class="preset-title">👁️ "What's in front of me?"</span>
+            <span class="preset-desc">Living room obstacle course</span>
+          </button>
+          <button class="preset-btn" data-preset="paris_menu">
+            <span class="preset-title">🥐 "Read this menu"</span>
+            <span class="preset-desc">Parisian bistro menu OCR</span>
+          </button>
+          <button class="preset-btn" data-preset="mandarin_direction">
+            <span class="preset-title">🗣️ "Translate conversation"</span>
+            <span class="preset-desc">Mandarin audio translation</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Settings & API Key Modal -->
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal-card">
+      <div class="card-header">
+        <div class="card-title">⚙ Scribe Settings</div>
+        <button id="settings-close-btn" class="btn-icon">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="api-key-input">Gemini API Key</label>
+        <input type="password" id="api-key-input" class="form-input" placeholder="AIzaSy...">
+        <div style="font-size: 0.7rem; color: var(--text-muted);">
+          Key is stored locally in your browser. Leave blank if configured on server in .env.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="voice-select">Gemini TTS Voice (Earpiece)</label>
+        <select id="voice-select" class="form-select">
+          <option value="Kore">Kore (Warm, balanced female)</option>
+          <option value="Puck">Puck (Crisp, expressive male)</option>
+          <option value="Fenrir">Fenrir (Authoritative, clear male)</option>
+          <option value="Aoede">Aoede (Gentle, lyrical female)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="camera-select">Select Camera Device</label>
+        <select id="camera-select" class="form-select">
+          <option value="">Default Web Camera</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="capture-timing-select">When to Capture Snapshot</label>
+        <select id="capture-timing-select" class="form-select">
+          <option value="start">Immediately when button pressed (Put phone down right away)</option>
+          <option value="end">When releasing button / finished speaking</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button id="save-settings-btn" class="btn-trigger" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;">
+          Save Preferences
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="audio-player" style="display: none;"></audio>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
